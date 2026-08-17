@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DSA Patterns — mahatolalit</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,500&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+  :root{
+    --bg: #f7f6f3;
+    --bg-panel: #ffffff;
+    --bg-card: #ffffff;
+    --bg-sunken: #f0eee9;
+    --line: #e4e1da;
+    --line-soft: #ebe8e2;
+    --text: #24231f;
+    --text-dim: #6b6a63;
+    --text-faint: #a4a199;
+    --accent: #3d5a80;
+    --accent-soft: #eef2f6;
+    --hero-bg: #dbe1e8;
+    --mark-bg: rgba(244,178,64,0.32);
+    --mark-text: #6b4a12;
+    --controls-bg: rgba(247,246,243,0.88);
+    --scrollbar-thumb: #d7d3c8;
+    --scrollbar-thumb-hover: #c3beb0;
+    --mono: 'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    --sans: 'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    --serif: 'Source Serif 4',Georgia,'Times New Roman',serif;
+  }
+
+  html[data-theme="dark"]{
+    --bg: #16181d;
+    --bg-panel: #1d2026;
+    --bg-card: #1d2026;
+    --bg-sunken: #23262e;
+    --line: #2c303a;
+    --line-soft: #282b34;
+    --text: #e6e5e1;
+    --text-dim: #9a9990;
+    --text-faint: #666a75;
+    --accent: #7fa2d1;
+    --accent-soft: #232a35;
+    --hero-bg: #1f2530;
+    --mark-bg: rgba(244,178,64,0.24);
+    --mark-text: #f4c88a;
+    --controls-bg: rgba(22,24,29,0.86);
+    --scrollbar-thumb: #343945;
+    --scrollbar-thumb-hover: #3f4552;
+  }
+
+  html, body{ transition: background-color .2s ease, color .2s ease; }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--sans);
+    -webkit-font-smoothing:antialiased;
+    line-height:1.55;
+  }
+
+  /* ---------- Header ---------- */
+  .hero{
+    position:relative;
+    padding:68px 24px 42px;
+    border-bottom:1px solid var(--line);
+    overflow:hidden;
+    background:
+      radial-gradient(ellipse 820px 420px at 12% -10%, rgba(255,255,255,0.35), transparent 60%),
+      radial-gradient(ellipse 700px 420px at 92% 0%, rgba(61,90,128,0.16), transparent 55%),
+      var(--hero-bg);
+  }
+  .hero-inner{ max-width:1180px; margin:0 auto; position:relative; }
+  .eyebrow{
+    font-family:var(--mono);
+    font-size:12px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--accent);
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:20px;
+    font-weight:500;
+  }
+  .eyebrow::before{
+    content:"";
+    width:6px;height:6px;border-radius:50%;
+    background:var(--accent);
+    box-shadow:0 0 0 4px rgba(61,90,128,0.14);
+  }
+  h1.title{
+    font-family:var(--serif);
+    font-size:clamp(36px, 5vw, 58px);
+    font-weight:600;
+    letter-spacing:-0.02em;
+    margin:0 0 16px;
+    color:var(--text);
+  }
+  .subtitle{
+    max-width:620px;
+    color:var(--text-dim);
+    font-size:16.5px;
+    margin:0 0 26px;
+    font-family:var(--sans);
+  }
+  .subtitle b{ color:var(--text); font-weight:600; }
+  .meta-row{
+    display:flex; flex-wrap:wrap; gap:10px 26px; align-items:center;
+    font-family:var(--mono); font-size:12.5px; color:var(--text-faint);
+    margin-bottom:28px;
+  }
+  .meta-row a{ color:var(--accent); text-decoration:none; border-bottom:1px dashed rgba(61,90,128,0.4);}
+  .meta-row a:hover{ color:#2a4258; border-bottom-color:#2a4258; }
+  .stat-strip{
+    display:flex; flex-wrap:wrap; gap:10px;
+  }
+  .stat-pill{
+    font-family:var(--mono);
+    font-size:12px;
+    padding:7px 14px;
+    border-radius:999px;
+    border:1px solid var(--line);
+    background:var(--bg-panel);
+    color:var(--text-dim);
+  }
+  .stat-pill b{ color:var(--text); font-weight:600; }
+
+  /* ---------- controls ---------- */
+  .controls{
+    position:sticky; top:0; z-index:40;
+    background:var(--controls-bg);
+    backdrop-filter:blur(14px) saturate(140%);
+    border-bottom:1px solid var(--line);
+    padding:14px 24px;
+  }
+  .controls-inner{
+    max-width:1180px; margin:0 auto;
+    display:flex; gap:14px; align-items:center; flex-wrap:wrap;
+  }
+  #search{
+    flex:1 1 240px;
+    background:var(--bg-panel);
+    border:1px solid var(--line);
+    border-radius:10px;
+    color:var(--text);
+    font-family:var(--sans);
+    font-size:14px;
+    padding:11px 14px 11px 38px;
+    outline:none;
+    background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="%23a4a199" stroke-width="2"><circle cx="6.5" cy="6.5" r="5"/><path d="M10.5 10.5L14 14" stroke-linecap="round"/></svg>');
+    background-repeat:no-repeat;
+    background-position:12px center;
+    transition:border-color .15s, box-shadow .15s;
+  }
+  #search:focus{ border-color:var(--accent); box-shadow:0 0 0 3px rgba(61,90,128,0.12); }
+  .btn{
+    font-family:var(--mono);
+    font-size:12.5px;
+    letter-spacing:0.01em;
+    color:var(--text-dim);
+    background:var(--bg-panel);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:11px 14px;
+    cursor:pointer;
+    transition:all .15s;
+    white-space:nowrap;
+    display:inline-flex;
+    align-items:center;
+  }
+  .btn:hover{ color:var(--text); border-color:#c9c5ba; background:var(--bg-sunken); }
+
+  /* ---------- layout ---------- */
+  .layout{
+    max-width:1180px;
+    margin:0 auto;
+    padding:40px 24px 90px;
+    display:grid;
+    grid-template-columns:220px 1fr;
+    gap:34px;
+    align-items:start;
+  }
+  @media (max-width: 860px){
+    .layout{ grid-template-columns:1fr; }
+    .toc{ display:none; }
+  }
+
+  /* ---------- TOC ---------- */
+  .toc{
+    position:sticky; top:82px;
+    max-height:calc(100vh - 100px);
+    overflow-y:auto;
+    padding-right:6px;
+  }
+  .toc-title{
+    font-family:var(--mono); font-size:11px; text-transform:uppercase;
+    letter-spacing:0.12em; color:var(--text-faint); margin-bottom:12px;
+    font-weight:500;
+  }
+  .toc a{
+    display:flex; align-items:center; gap:9px;
+    text-decoration:none; color:var(--text-dim);
+    font-size:13px; padding:6px 8px; border-radius:7px;
+    margin-bottom:2px; transition:all .12s;
+  }
+  .toc a:hover{ color:var(--text); background:var(--bg-sunken); }
+  .toc a .dot{ width:8px; height:8px; border-radius:2px; flex:none; }
+
+  /* ---------- category cards ---------- */
+  .category{
+    margin-bottom:22px;
+    border:1px solid var(--line);
+    border-radius:14px;
+    background:var(--bg-card);
+    overflow:hidden;
+    scroll-margin-top:80px;
+    box-shadow:0 1px 2px rgba(30,28,20,0.03);
+  }
+  .cat-head{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:19px 22px;
+    cursor:pointer;
+    user-select:none;
+    gap:16px;
+  }
+  .cat-head:hover{ background:var(--bg-sunken); }
+  .cat-left{ display:flex; align-items:center; gap:14px; min-width:0; }
+  .cat-index{
+    font-family:var(--mono); font-size:12px; color:var(--text-faint);
+    flex:none; width:26px;
+  }
+  .cat-swatch{
+    width:9px; height:32px; border-radius:5px; flex:none;
+  }
+  .cat-name{
+    font-family:var(--serif);
+    font-size:19px; font-weight:600; letter-spacing:-0.005em; color:var(--text);
+  }
+  .cat-count{
+    font-family:var(--mono); font-size:11.5px; color:var(--text-faint);
+    margin-top:3px;
+  }
+  .chev{
+    flex:none; width:18px; height:18px; color:var(--text-faint);
+    transition:transform .2s;
+  }
+  .category.open .chev{ transform:rotate(90deg); }
+  .category.open .cat-head{ border-bottom:1px solid var(--line-soft); }
+
+  .cat-body{
+    display:none;
+    padding:4px 22px 22px;
+  }
+  .category.open .cat-body{ display:block; }
+
+  /* ---------- branch tree ---------- */
+  .branch{
+    border-left:2px solid var(--line);
+    margin-left:12px;
+    padding-left:20px;
+    margin-top:16px;
+    position:relative;
+  }
+  .branch-head{
+    font-family:var(--sans);
+    font-size:14.5px;
+    font-weight:600;
+    color:var(--text);
+    margin-bottom:9px;
+    position:relative;
+  }
+  .branch-head::before{
+    content:"";
+    position:absolute; left:-26px; top:8px;
+    width:14px; height:2px;
+  }
+  .leaf-list{
+    list-style:none; margin:0 0 4px; padding:0;
+    display:flex; flex-direction:column; gap:6px;
+  }
+  .leaf-list li{
+    font-size:13.5px;
+    color:var(--text-dim);
+    font-family:var(--mono);
+    position:relative;
+    padding-left:16px;
+    line-height:1.5;
+  }
+  .leaf-list li::before{
+    content:"–";
+    position:absolute; left:0; color:var(--text-faint);
+  }
+  .solo-leaf{
+    font-size:14.5px; font-weight:600; color:var(--text);
+    margin-top:14px;
+    position:relative;
+    padding-left:0;
+  }
+
+  mark{
+    background:var(--mark-bg);
+    color:var(--mark-text);
+    border-radius:3px;
+    padding:0 2px;
+    font-weight:600;
+  }
+
+  .hidden{ display:none !important; }
+  .no-results{
+    text-align:center; padding:60px 20px; color:var(--text-faint);
+    font-family:var(--mono); font-size:14px; display:none;
+  }
+
+  footer{
+    max-width:1180px; margin:0 auto; padding:22px 24px 60px;
+    color:var(--text-faint); font-family:var(--mono); font-size:12px;
+    display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px;
+    border-top:1px solid var(--line);
+  }
+  footer a{ color:var(--accent); text-decoration:none; }
+
+  ::-webkit-scrollbar{ width:9px; height:9px; }
+  ::-webkit-scrollbar-track{ background:transparent; }
+  ::-webkit-scrollbar-thumb{ background:var(--scrollbar-thumb); border-radius:6px; }
+  ::-webkit-scrollbar-thumb:hover{ background:var(--scrollbar-thumb-hover); }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <h1 class="title">DSA Pattern Map</h1>
+    <p class="subtitle">A structured breakdown of every core <b>Data Structures &amp; Algorithms</b> pattern — organized by data structure, with the sub-techniques and canonical problems nested underneath each one.</p>
+    <div class="meta-row">
+      <span>By <a href="https://github.com/mahatolalit/" target="_blank" rel="noopener">@draky</a></span>
+    </div>
+    <div class="stat-strip" id="statStrip"></div>
+  </div>
+</header>
+
+<div class="controls">
+  <div class="controls-inner">
+    <input id="search" type="text" placeholder="Search a pattern, e.g. &quot;monotonic stack&quot;, &quot;dijkstra&quot;, &quot;kadane&quot;…" autocomplete="off">
+    <button class="btn" id="expandAll">Expand all</button>
+    <button class="btn" id="collapseAll">Collapse all</button>
+    <button class="btn" id="themeToggle" aria-label="Toggle dark mode" title="Toggle dark mode">
+      <svg id="iconSun" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:6px;"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg><svg id="iconMoon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px; margin-right:6px; display:none;"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg><span id="themeLabel">Dark</span>
+    </button>
+  </div>
+</div>
+
+<div class="layout">
+  <nav class="toc" id="toc">
+    <div class="toc-title">Categories</div>
+  </nav>
+
+  <main id="content"></main>
+</div>
+
+<div class="no-results" id="noResults">No patterns match your search.</div>
+
+<footer>
+  <span>DSA Patterns — by @draky</span>
+  <span>Built for quick revision &amp; interview prep</span>
+</footer>
+
+<script>
+/* ===================== DATA ===================== */
+// Each category: name, color, and branches.
+// A branch can have direct sub-leaves (array of strings) and/or nested twigs (branch objects).
+const DATA = [
+  {
+    name: "Array", color: "#6558F5",
+    branches: [
+      { head: "Two Pointer", leaves: ["Opposite ends (left + right)", "Same direction (fast & slow pointers)", "Partition / Dutch flag"] },
+      { head: "Sliding Window", twigs: [
+          { head: "Fixed Size", leaves: [] },
+          { head: "Variable Size", leaves: ["Expand–Shrink", "Monotonic Window"] }
+        ]
+      },
+      { head: "Prefix Based", leaves: ["Prefix Sum", "Prefix XOR", "2D Prefix"] },
+      { head: "Kadane's / Subarray", leaves: ["Max subarray sum (Kadane's)", "Max product subarray", "Subarray with given XOR / sum"] },
+      { head: "Binary Search", leaves: ["on index", "on answer"] },
+    ]
+  },
+  {
+    name: "String", color: "#BD34D1",
+    branches: [
+      { head: "Sliding Window", leaves: ["Longest substring without repeat", "Minimum window substring", "Anagram / permutation in string"] },
+      { head: "Two Pointers", leaves: ["Palindrome check", "Reverse words / characters", "String compression"] },
+      { head: "Pattern Matching", leaves: ["KMP (failure function)", "Rabin-Karp (rolling hash)", "Z-algorithm"] },
+    ]
+  },
+  {
+    name: "Hash Map", color: "#2C88D9",
+    branches: [
+      { head: "Frequency Based", leaves: [] },
+      { head: "Lookup Based", leaves: [] },
+      { head: "Set Based", leaves: [] },
+      { head: "Index Mapping", leaves: [] },
+      { head: "Grouping Pattern", leaves: [] },
+    ]
+  },
+  {
+    name: "Stack", color: "#1AAE9F",
+    branches: [
+      { head: "Monotonic Stack", leaves: ["Increasing", "Decreasing"] },
+      { head: "Nearest Element", leaves: ["Next Greater", "Next Smaller", "Previous Variants"] },
+      { head: "Range / Span", leaves: [] },
+      { head: "min/Max Stack", leaves: [] },
+      { head: "Expression Handling", leaves: [] },
+      { head: "Histogram Pattern", leaves: [] },
+    ]
+  },
+  {
+    name: "Queue / Deque", color: "#E8833A",
+    branches: [
+      { head: "FIFO Processing", leaves: [] },
+      { head: "Level-wise Processing", leaves: [] },
+      { head: "Circular Queue Pattern", leaves: [] },
+      { head: "Deque Based", leaves: [] },
+    ]
+  },
+  {
+    name: "Linked List", color: "#F7C325",
+    branches: [
+      { head: "Pointer Techniques", leaves: ["Fast–Slow", "Cycle Detection", "Finding Middle"] },
+      { head: "Reversal", leaves: ["Full Reverse", "Partial (k-group)"] },
+      { head: "Merge Lists", leaves: [] },
+    ]
+  },
+  {
+    name: "Trees", color: "#D3455B",
+    branches: [
+      { head: "Traversal", leaves: ["DFS (Pre / In / Post order)", "BFS (Level Order / zigzag / right side view)"] },
+      { head: "Recursion Patterns", leaves: ["Top Down approach", "Bottom Up approach"] },
+      { head: "Path Based", leaves: ["Max path sum", "Diameter / Height / depth"] },
+      { head: "BST (Binary Search Tree)", leaves: [] },
+    ]
+  },
+  {
+    name: "Recursion", color: "#730FC3",
+    branches: [
+      { head: "Backtracking", twigs: [
+          { head: "Exploration", leaves: ["Decision Tree", "Choose–Explore–Unchoose", "Subsets (power set)", "Permutations / Combinations (nCr)", "Word search on grid", "Palindrome partitioning"] },
+          { head: "Pruning / State Tracking", leaves: [] }
+        ]
+      },
+      { head: "Divide & Conquer", leaves: ["Merge sort pattern", "Quick select (Kth largest)", "Count inversions"] },
+    ]
+  },
+  {
+    name: "Heap", color: "#207868",
+    branches: [
+      { head: "Top K / Kth Element / k closest points", leaves: [] },
+      { head: "Greedy + Heap", leaves: ["Task scheduler", "Meeting rooms", "Reorganize string", "Huffman encoding"] },
+      { head: "K-way Merge", leaves: [] },
+    ]
+  },
+  {
+    name: "Graphs", color: "#897A5F",
+    branches: [
+      { head: "Traversal", leaves: ["BFS", "DFS"] },
+      { head: "Cycle Detection", leaves: ["Directed", "Undirected"] },
+      { head: "Topological Sort", leaves: ["Topological Sort (BFS / DFS)", "Kahn's algorithm (BFS in-degree)", "DFS-based topo sort"] },
+      { head: "Shortest Path", leaves: ["Dijkstra", "Bellman-Ford", "Floyd-Warshall (all pairs)"] },
+      { head: "Spanning Tree", leaves: ["Kruskal", "Prim's"] },
+      { head: "Union-Find (DSU)", leaves: ["Detect cycle in undirected graph"] },
+      { head: "Bipartite / Multi-source BFS", leaves: ["0-1 BFS"] },
+    ]
+  },
+  {
+    name: "Trie", color: "#AC6363",
+    branches: [
+      { head: "Prefix Based", leaves: ["Insert / Search", "Prefix Match"] },
+      { head: "Bitwise Trie", leaves: [] },
+    ]
+  },
+  {
+    name: "Dynamic Programming", color: "#788896",
+    branches: [
+      { head: "Core", leaves: ["1D", "2D"] },
+      { head: "Transition Type", leaves: ["Linear DP", "Grid DP", "Decision DP"] },
+      { head: "Pattern Types", leaves: ["Knapsack", "Sequence DP", "Partition DP", "Interval DP"] },
+      { head: "Advanced", leaves: ["Bitmask DP", "Digit DP", "DP on Trees"] },
+      { head: "Optimization", leaves: ["Memoization", "Tabulation"] },
+    ]
+  },
+  {
+    name: "Greedy", color: "#BD34D1",
+    branches: [
+      { head: "Interval Greedy", leaves: ["Activity Selection", "Non-overlapping Intervals", "Minimum Removals"] },
+      { head: "Scheduling Greedy", leaves: ["Deadline Based Scheduling", "Profit Based Selection"] },
+      { head: "Resource Allocation", leaves: ["Minimum Platforms / Rooms", "Meeting Rooms"] },
+      { head: "Jump Game Pattern", leaves: [] },
+      { head: "Huffman / Merge Cost", leaves: [] },
+    ]
+  },
+  {
+    name: "Bit Manipulation", color: "#2C88D9",
+    branches: [
+      { head: "Core", leaves: ["XOR Pattern", "Bit Masking"] },
+      { head: "Usage", leaves: ["Subset via Bits", "Bit Checks", "Prefix XOR"] },
+    ]
+  },
+  {
+    name: "Sorting Algorithms", color: "#4B5C6B",
+    branches: [
+      { head: "Comparison-based", leaves: ["Bubble Sort", "Selection Sort", "Insertion Sort", "Merge Sort", "Quick Sort", "Heap Sort"] },
+      { head: "Non-comparison-based", leaves: ["Counting Sort", "Radix Sort", "Bucket Sort"] },
+    ]
+  },
+  {
+    name: "Range Structures", color: "#1AAE9F",
+    branches: [
+      { head: "Segment Tree", leaves: ["Range Query", "Lazy Propagation"] },
+      { head: "Fenwick Tree", leaves: ["Prefix Query"] },
+    ]
+  },
+];
+
+/* ===================== RENDER ===================== */
+const content = document.getElementById('content');
+const toc = document.getElementById('toc');
+const statStrip = document.getElementById('statStrip');
+
+function slug(s){ return s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,''); }
+
+function countLeaves(cat){
+  let n = 0;
+  cat.branches.forEach(b=>{
+    n += 1;
+    if(b.leaves) n += b.leaves.length;
+    if(b.twigs) b.twigs.forEach(t=>{ n += 1; n += (t.leaves||[]).length; });
+  });
+  return n;
+}
+
+let totalPatterns = 0;
+
+DATA.forEach((cat, i) => {
+  const id = slug(cat.name);
+  totalPatterns += countLeaves(cat);
+
+  // TOC entry
+  const a = document.createElement('a');
+  a.href = '#' + id;
+  a.innerHTML = `<span class="dot" style="background:${cat.color}"></span>${cat.name}`;
+  toc.appendChild(a);
+
+  // Category card
+  const card = document.createElement('section');
+  card.className = 'category';
+  card.id = id;
+  card.dataset.name = cat.name.toLowerCase();
+
+  const head = document.createElement('div');
+  head.className = 'cat-head';
+  head.innerHTML = `
+    <div class="cat-left">
+      <span class="cat-index">${String(i+1).padStart(2,'0')}</span>
+      <span class="cat-swatch" style="background:${cat.color}"></span>
+      <div>
+        <div class="cat-name">${cat.name}</div>
+        <div class="cat-count">${cat.branches.length} sub-pattern group${cat.branches.length!==1?'s':''}</div>
+      </div>
+    </div>
+    <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg>
+  `;
+  head.addEventListener('click', () => card.classList.toggle('open'));
+
+  const body = document.createElement('div');
+  body.className = 'cat-body';
+
+  cat.branches.forEach(b => {
+    const branch = document.createElement('div');
+    branch.className = 'branch';
+    branch.style.borderLeftColor = cat.color + '55';
+
+    const bh = document.createElement('div');
+    bh.className = 'branch-head';
+    bh.textContent = b.head;
+    bh.style.setProperty('--dot', cat.color);
+    branch.appendChild(bh);
+    // colored connector dot
+    const style = document.createElement('style');
+    branch.appendChild(style);
+
+    if (b.leaves && b.leaves.length){
+      const ul = document.createElement('ul');
+      ul.className = 'leaf-list';
+      b.leaves.forEach(l => {
+        const li = document.createElement('li');
+        li.textContent = l;
+        ul.appendChild(li);
+      });
+      branch.appendChild(ul);
+    }
+
+    if (b.twigs && b.twigs.length){
+      b.twigs.forEach(t => {
+        const sub = document.createElement('div');
+        sub.className = 'branch';
+        sub.style.borderLeftColor = cat.color + '30';
+        sub.style.marginTop = '10px';
+        const sh = document.createElement('div');
+        sh.className = 'branch-head';
+        sh.style.fontSize = '13.5px';
+        sh.textContent = t.head;
+        sub.appendChild(sh);
+        if (t.leaves && t.leaves.length){
+          const ul2 = document.createElement('ul');
+          ul2.className = 'leaf-list';
+          t.leaves.forEach(l => {
+            const li = document.createElement('li');
+            li.textContent = l;
+            ul2.appendChild(li);
+          });
+          sub.appendChild(ul2);
+        }
+        branch.appendChild(sub);
+      });
+    }
+
+    body.appendChild(branch);
+  });
+
+  card.appendChild(head);
+  card.appendChild(body);
+  content.appendChild(card);
+});
+
+// set branch head bullet colors via CSS custom prop trick
+document.querySelectorAll('.branch-head').forEach(el=>{});
+document.querySelectorAll('.branch').forEach(b=>{});
+document.querySelectorAll('.category').forEach(cat=>{});
+// apply dot color using data attribute pseudo hack: simplest is inline style on ::before via CSS var
+document.querySelectorAll('.category').forEach(card=>{
+  const color = DATA.find(c=>slug(c.name)===card.id).color;
+  card.querySelectorAll('.branch-head').forEach(bh=>{
+    bh.style.setProperty('--c', color);
+  });
+});
+const styleTag = document.createElement('style');
+styleTag.textContent = `.branch-head::before{ background: var(--c, #6558F5); }`;
+document.head.appendChild(styleTag);
+
+statStrip.innerHTML = `
+  <span class="stat-pill"><b>${DATA.length}</b> categories</span>
+  <span class="stat-pill"><b>${totalPatterns}</b> patterns &amp; techniques</span>
+`;
+
+/* ===================== EXPAND / COLLAPSE ===================== */
+document.getElementById('expandAll').addEventListener('click', () => {
+  document.querySelectorAll('.category').forEach(c => c.classList.add('open'));
+});
+document.getElementById('collapseAll').addEventListener('click', () => {
+  document.querySelectorAll('.category').forEach(c => c.classList.remove('open'));
+});
+
+// open first category by default
+document.querySelector('.category')?.classList.add('open');
+
+/* ===================== THEME TOGGLE ===================== */
+(function(){
+  const root = document.documentElement;
+  const btn = document.getElementById('themeToggle');
+  const iconSun = document.getElementById('iconSun');
+  const iconMoon = document.getElementById('iconMoon');
+  const label = document.getElementById('themeLabel');
+
+  function applyTheme(theme){
+    if (theme === 'dark'){
+      root.setAttribute('data-theme', 'dark');
+      iconSun.style.display = 'none';
+      iconMoon.style.display = 'inline-block';
+      label.textContent = 'Light';
+    } else {
+      root.removeAttribute('data-theme');
+      iconSun.style.display = 'inline-block';
+      iconMoon.style.display = 'none';
+      label.textContent = 'Dark';
+    }
+  }
+
+  const saved = localStorage.getItem('dsa-theme');
+  applyTheme(saved === 'dark' ? 'dark' : 'light'); // default light
+
+  btn.addEventListener('click', () => {
+    const isDark = root.getAttribute('data-theme') === 'dark';
+    const next = isDark ? 'light' : 'dark';
+    applyTheme(next);
+    localStorage.setItem('dsa-theme', next);
+  });
+})();
+
+/* ===================== SEARCH ===================== */
+const searchInput = document.getElementById('search');
+const noResults = document.getElementById('noResults');
+
+function clearMarks(root){
+  root.querySelectorAll('mark').forEach(m=>{
+    const parent = m.parentNode;
+    parent.replaceChild(document.createTextNode(m.textContent), m);
+    parent.normalize();
+  });
+}
+
+function highlight(el, query){
+  const text = el.textContent;
+  const idx = text.toLowerCase().indexOf(query);
+  if (idx === -1) return false;
+  const before = text.slice(0, idx);
+  const match = text.slice(idx, idx + query.length);
+  const after = text.slice(idx + query.length);
+  el.innerHTML = '';
+  el.appendChild(document.createTextNode(before));
+  const mark = document.createElement('mark');
+  mark.textContent = match;
+  el.appendChild(mark);
+  el.appendChild(document.createTextNode(after));
+  return true;
+}
+
+searchInput.addEventListener('input', () => {
+  const q = searchInput.value.trim().toLowerCase();
+  let anyVisible = false;
+
+  document.querySelectorAll('.category').forEach(card => {
+    clearMarks(card);
+    if (!q){
+      card.classList.remove('hidden');
+      card.querySelectorAll('.branch').forEach(b=>b.classList.remove('hidden'));
+      card.querySelectorAll('.leaf-list li').forEach(li=>li.classList.remove('hidden'));
+      card.classList.remove('open');
+      return;
+    }
+
+    let catMatch = card.dataset.name.includes(q);
+    let catHasVisible = catMatch;
+
+    card.querySelectorAll(':scope > .cat-body > .branch').forEach(branch => {
+      let branchVisible = false;
+      const bh = branch.querySelector(':scope > .branch-head');
+      const bhMatch = bh.textContent.toLowerCase().includes(q);
+      if (bhMatch){ branchVisible = true; highlight(bh, q); }
+
+      branch.querySelectorAll(':scope > .leaf-list > li').forEach(li => {
+        if (li.textContent.toLowerCase().includes(q)){
+          li.classList.remove('hidden');
+          highlight(li, q);
+          branchVisible = true;
+        } else {
+          li.classList.add('hidden');
+        }
+      });
+
+      branch.querySelectorAll(':scope > .branch').forEach(sub => {
+        let subVisible = false;
+        const sh = sub.querySelector(':scope > .branch-head');
+        const shMatch = sh.textContent.toLowerCase().includes(q);
+        if (shMatch){ subVisible = true; highlight(sh, q); }
+        sub.querySelectorAll(':scope > .leaf-list > li').forEach(li2 => {
+          if (li2.textContent.toLowerCase().includes(q)){
+            li2.classList.remove('hidden');
+            highlight(li2, q);
+            subVisible = true;
+          } else {
+            li2.classList.add('hidden');
+          }
+        });
+        sub.classList.toggle('hidden', !subVisible);
+        if (subVisible) branchVisible = true;
+      });
+
+      branch.classList.toggle('hidden', !branchVisible && !catMatch);
+      if (branchVisible || catMatch) catHasVisible = true;
+    });
+
+    if (catMatch){
+      // show everything under a matching category name
+      card.querySelectorAll('.branch').forEach(b=>b.classList.remove('hidden'));
+      card.querySelectorAll('.leaf-list li').forEach(li=>li.classList.remove('hidden'));
+    }
+
+    card.classList.toggle('hidden', !catHasVisible);
+    if (catHasVisible){ card.classList.add('open'); anyVisible = true; }
+  });
+
+  noResults.style.display = anyVisible || !q ? 'none' : 'block';
+});
+</script>
+</body>
+</html>
